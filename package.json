@@ -9,11 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.57.4",
     "next": "15.5.2",
     "react": "19.1.0",
-    "react-dom": "19.1.0",
-    "sqlite": "^5.1.1",
-    "sqlite3": "^5.1.7"
+    "react-dom": "19.1.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
