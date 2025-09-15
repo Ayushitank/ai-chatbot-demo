@@ -1,43 +1,40 @@
-// pages/api/customers.js
-import { initDB } from "../../lib/db";
+// src/pages/api/customers.js
+import { supabase } from "@/lib/db";
 
 export default async function handler(req, res) {
-  const db = await initDB();
-
-  try {
-    if (req.method === "GET") {
-      // View all customers
-      const customers = await db.all("SELECT * FROM customers");
-      return res.json(customers);
+  if (req.method === "GET") {
+    try {
+      const { data, error } = await supabase.from("customers").select("*");
+      if (error) throw error;
+      return res.status(200).json(data);
+    } catch (err) {
+      console.error("GET /api/customers error:", err.message);
+      return res.status(500).json({ error: err.message });
     }
+  }
 
-    if (req.method === "POST") {
-      // Add a customer
+  if (req.method === "POST") {
+    try {
       const { name, email } = req.body;
+
       if (!name || !email) {
-        return res.status(400).json({ error: "Name and Email required" });
+        return res.status(400).json({ error: "Name and email are required" });
       }
 
-      await db.run("INSERT INTO customers (name, email) VALUES (?, ?)", [
-        name,
-        email,
-      ]);
-      return res.json({ message: "Customer added successfully" });
+      const { data, error } = await supabase
+        .from("customers")
+        .insert([{ name, email }])
+        .select(); // return inserted row
+
+      if (error) throw error;
+
+      return res.status(201).json(data[0]);
+    } catch (err) {
+      console.error("POST /api/customers error:", err.message);
+      return res.status(500).json({ error: err.message });
     }
-
-    if (req.method === "DELETE") {
-      // Delete customer by id
-      const { id } = req.query;
-      if (!id) return res.status(400).json({ error: "Customer ID required" });
-
-      await db.run("DELETE FROM customers WHERE id = ?", [id]);
-      return res.json({ message: "Customer deleted successfully" });
-    }
-
-    res.setHeader("Allow", ["GET", "POST", "DELETE"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: "Database error" });
   }
+
+  res.setHeader("Allow", ["GET", "POST"]);
+  return res.status(405).end(`Method ${req.method} Not Allowed`);
 }
